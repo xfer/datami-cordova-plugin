@@ -1,0 +1,40 @@
+{
+  "_args": [
+    [
+      "datami-cordova-plugin@1.3.0",
+      "/Users/tessela/Projects/client/coca-cola-timaco/app/timaco"
+    ]
+  ],
+  "_from": "datami-cordova-plugin@1.3.0",
+  "_id": "datami-cordova-plugin@1.3.0",
+  "_inBundle": false,
+  "_integrity": "sha512-G/lyuAVDl2edPC1cJRDGxsGIz/jVsZzj3W1iRBLsUFPvFAhaCLXhqWifsiuhAFezLCvoE/uj97/O0LzOqRO+zQ==",
+  "_location": "/datami-cordova-plugin",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "datami-cordova-plugin@1.3.0",
+    "name": "datami-cordova-plugin",
+    "escapedName": "datami-cordova-plugin",
+    "rawSpec": "1.3.0",
+    "saveSpec": null,
+    "fetchSpec": "1.3.0"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/datami-cordova-plugin/-/datami-cordova-plugin-1.3.0.tgz",
+  "_spec": "1.3.0",
+  "_where": "/Users/tessela/Projects/client/coca-cola-timaco/app/timaco",
+  "cordova": {
+    "id": "datami-cordova-plugin",
+    "platforms": [
+      "android",
+      "ios"
+    ]
+  },
+  "description": "Datami cordova plugin to include Datami Sponsored Data SDK to the app.",
+  "name": "datami-cordova-plugin",
+  "version": "1.3.0"
+}

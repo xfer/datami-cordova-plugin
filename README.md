@@ -1,0 +1,1 @@
+# datami-cordova-plugin
