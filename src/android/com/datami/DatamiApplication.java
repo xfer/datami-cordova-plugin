@@ -9,10 +9,14 @@ import java.util.Map;
 
 import org.xmlpull.v1.XmlPullParserException;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Application;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
+import android.os.Bundle;
 import android.util.Log;
 
 import com.datami.smi.SdReason;
@@ -21,7 +25,7 @@ import com.datami.smi.SdStateChangeListener;
 import com.datami.smi.SmiResult;
 import com.datami.smi.SmiSdk;
 
-public class DatamiApplication extends Application implements SdStateChangeListener{
+public class DatamiApplication extends Application implements SdStateChangeListener, Application.ActivityLifecycleCallbacks {
 	final String TAG = "Datami";
 	private List<String> supportedKeys = new ArrayList(Arrays.asList("api_key", "sdk_messaging", "sdk_notficiation_messaging", "icon_folder", "icon_name"));
 
@@ -31,6 +35,8 @@ public class DatamiApplication extends Application implements SdStateChangeListe
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		registerActivityLifecycleCallbacks(this);
+
 		Context context = getApplicationContext();
 		int id = context.getResources().getIdentifier("config", "xml", context.getPackageName());
 
@@ -82,67 +88,122 @@ public class DatamiApplication extends Application implements SdStateChangeListe
 		}
 	}
 
-	 @Override
-	 public void onChange(SmiResult currentSmiResult) {
-		 smiResult = currentSmiResult;
-	 	SdState sdState = currentSmiResult.getSdState();
-         Log.d(TAG, "sponsored data state : "+sdState);
-         if(sdState == SdState.SD_AVAILABLE) {
-             // TODO: show a banner or message to user, indicating that the data usage is sponsored and charges do not apply to user data plan
-         } else if(sdState == SdState.SD_NOT_AVAILABLE) {
-             // TODO: show a banner or message to user, indicating that the data usage is NOT sponsored and charges apply to user data plan
-             Log.d(TAG, " - reason: " + currentSmiResult.getSdReason());
-         } else if(sdState == SdState.WIFI) {
-             // device is in wifi
-         }
+	@Override
+	public void onChange(SmiResult currentSmiResult) {
+		smiResult = currentSmiResult;
+		SdState sdState = currentSmiResult.getSdState();
+		Log.d(TAG, "sponsored data state : "+sdState);
+		if(sdState == SdState.SD_AVAILABLE) {
+
+			if (currentActivity != null) {
+				displayDialog(currentActivity);
+			}
+
+			// TODO: show a banner or message to user, indicating that the data usage is sponsored and charges do not apply to user data plan
+		} else if(sdState == SdState.SD_NOT_AVAILABLE) {
+			// TODO: show a banner or message to user, indicating that the data usage is NOT sponsored and charges apply to user data plan
+			Log.d(TAG, " - reason: " + currentSmiResult.getSdReason());
+		} else if(sdState == SdState.WIFI) {
+			// device is in wifi
+		}
 		DatamiSDStateChangePlugin.onChange();
-	 }
+	}
 
 	private Map loadConfigsFromXml(Resources res, int configXmlResourceId){
-	   //
-	   // Resources is the same thing from above that can be obtained
-	   // by context.getResources()
-	   // configXmlResourceId is the resource id integer obtained in step 1
-	   XmlResourceParser xrp = res.getXml(configXmlResourceId);
+		//
+		// Resources is the same thing from above that can be obtained
+		// by context.getResources()
+		// configXmlResourceId is the resource id integer obtained in step 1
+		XmlResourceParser xrp = res.getXml(configXmlResourceId);
 
-	   Map<String,String> configs = new HashMap();
+		Map<String,String> configs = new HashMap();
 
-	   //
-	   // walk the config.xml tree and save all <preference> tags we want
-	   //
-	   String preferenceTag = "preference";
-	   try{
-	      xrp.next();
-	      while(xrp.getEventType() != XmlResourceParser.END_DOCUMENT){
-	         if(preferenceTag.equals(xrp.getName())){
-	            String key = matchSupportedKeyName(xrp.getAttributeValue(null, "name"));
-	            if(key != null){
-	               configs.put(key, xrp.getAttributeValue(null, "value"));
-	            }
-	         }
-	         xrp.next();
-	      }
-	   } catch(XmlPullParserException ex){
-	      Log.e(TAG, ex.toString());
-	   }  catch(IOException ex){
-	      Log.e(TAG, ex.toString());
-	   }
+		//
+		// walk the config.xml tree and save all <preference> tags we want
+		//
+		String preferenceTag = "preference";
+		try{
+			xrp.next();
+			while(xrp.getEventType() != XmlResourceParser.END_DOCUMENT){
+				if(preferenceTag.equals(xrp.getName())){
+					String key = matchSupportedKeyName(xrp.getAttributeValue(null, "name"));
+					if(key != null){
+						configs.put(key, xrp.getAttributeValue(null, "value"));
+					}
+				}
+				xrp.next();
+			}
+		} catch(XmlPullParserException ex){
+			Log.e(TAG, ex.toString());
+		}  catch(IOException ex){
+			Log.e(TAG, ex.toString());
+		}
 
-	   return configs;
+		return configs;
 	}
 
 	private String matchSupportedKeyName(String testKey){
-	   //
-	   // If key matches, return the version with correct casing.
-	   // If not, return null.
-	   // O(n) here is okay because this is a short list of just a few items
-	   for(String realKey : supportedKeys){
-	      if( realKey.equalsIgnoreCase(testKey)){
-	         return realKey;
-	      }
-	   }
-	   return null;
+		//
+		// If key matches, return the version with correct casing.
+		// If not, return null.
+		// O(n) here is okay because this is a short list of just a few items
+		for(String realKey : supportedKeys){
+			if( realKey.equalsIgnoreCase(testKey)){
+				return realKey;
+			}
+		}
+		return null;
 	}
 
+	private Activity currentActivity;
 
+	@Override
+	public void onActivityCreated(Activity activity, Bundle bundle) {
+		currentActivity = activity;
+	}
+
+	@Override
+	public void onActivityStarted(Activity activity) {
+		currentActivity = activity;
+
+	}
+
+	@Override
+	public void onActivityResumed(Activity activity) {
+		currentActivity = activity;
+
+	}
+
+	@Override
+	public void onActivityPaused(Activity activity) {
+		currentActivity = activity;
+	}
+
+	@Override
+	public void onActivityStopped(Activity activity) {
+
+	}
+
+	@Override
+	public void onActivitySaveInstanceState(Activity activity, Bundle bundle) {
+
+	}
+
+	@Override
+	public void onActivityDestroyed(Activity activity) {
+
+	}
+
+	private static void displayDialog(Context context) {
+		new AlertDialog.Builder(context)
+				.setMessage("Você está navegando sem consumir seu plano de dados.")
+				.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+						// Continue with delete operation
+					}
+				})
+
+				.setIcon(android.R.drawable.ic_dialog_alert)
+				.show();
+	}
 }
